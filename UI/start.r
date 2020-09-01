@@ -1,0 +1,4 @@
+library(shiny)
+#path<-"C:\\Users\\ringa\\Desktop\\UI"
+#runApp(path)
+runApp()

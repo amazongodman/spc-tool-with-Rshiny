@@ -1,0 +1,161 @@
+#install.packages("plotly")
+library(plotly)
+library(tidyverse)
+
+x <- c(1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012)
+roW <- c(219, 146, 112, 127, 124, 180, 236, 207, 236, 263, 350, 430, 474, 526, 488, 537, 500, 439)
+China <- c(16, 13, 10, 11, 28, 37, 43, 55, 56, 88, 105, 156, 270, 299, 340, 403, 549, 499)
+random_y <- rnorm(18, mean = 200,10)
+
+data <- data.frame(x, roW, China, random_y)
+
+fig <- plot_ly(data, x = ~x, y = ~roW, type = 'bar', name = 'Rest of the World'
+               #,
+               #marker = list(color = 'rgb(55, 83, 109)')
+               )
+
+fig <- fig %>% add_trace(y = ~China, name = 'China'
+                         #, marker = list(color = 'rgb(26, 118, 255)')
+                         )
+fig <- fig %>% add_trace(data, x = ~x, y = ~random_y, type = 'scatter', mode = 'lines')
+
+fig
+
+
+
+
+
+
+
+source( "C:\\Users\\ringa\\Desktop\\UI\\func\\fun.r" )
+
+print_x(100)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############
+###円グラフ割合
+##############
+
+df<-data.frame(
+  labels = c("Eve", "Cain", "Seth", "Enos", "Noam", "Abel", "Awan", "Enoch", "Azura"),
+  parents = c("", "Eve", "Eve", "Seth", "Seth", "Eve", "Eve", "Awan", "Eve"),
+  values = c(42, 14, 12, 10, 2, 6, 6, 4, 4)
+)
+
+
+
+fig <- plot_ly(
+  labels = df$labels,
+  parents = df$parents,
+  values = df$values,
+  type = 'sunburst',
+  branchvalues = 'total'
+)
+
+fig
+
+
+
+
+
+
+
+
+
+#線の下塗りつぶし
+# fill="tonexty", でつぶす
+
+
+elw <- structure(list(year = 1975:1979, x10006 = c(0L, 0L, 0L, 0L, 0L),
+   x12018 = c(285.4309, 265.1403, 369.1682, 604.1203, 587.2926
+), x19000 = c(26.48335, 36.45504, 37.28563, 126.8903, 182.8447
+), x20000 = c(229.9651, 369.8476, 496.058, 504.2717, 445.3687
+), x99999 = c(1707.498, 2223.986, 2599.086, 2661.213, 3207.065
+)), .Names = c("year", "x10006", "x12018", "x19000", "x20000", 
+"x99999"), row.names = c(NA, -5L), class = "data.frame") 
+
+elw_stack <- structure(list(year = 1975:1979, x10006 = c(0L, 0L, 0L, 0L, 0L), 
+    x12018 = c(285L, 265L, 369L, 604L, 587L), 
+    x19000 = c(312L, 302L, 406L, 731L, 770L), 
+    x20000 = c(542L, 671L, 903L, 1235L, 1216L), 
+    x99999 = c(2249L, 2895L, 3502L, 3896L, 4423L)), 
+    .Names = c("year", "x10006", "x12018", "x19000", "x20000", "x99999"), 
+    row.names = c(NA, -5L), class = "data.frame")
+
+
+library(plotly)
+
+plot_ly(data = elw_stack, x = ~year, y = ~x19000,  type = 'bar') %>%
+  add_trace(y=~x12018, mode="lines", 
+fill="tonexty",
+type = "scatter", 
+name="x12018") 
+
+
+
+##時系列　スライダーバー
+
+library(plotly)
+library(quantmod)
+
+# Download some data
+getSymbols(Symbols = c("AAPL", "MSFT"), from = '2018-01-01', to = '2019-01-01')
+
+ds <- data.frame(Date = index(AAPL), AAPL[,6], MSFT[,6])
+
+fig <- plot_ly(ds, x = ~Date)
+fig <- fig %>% add_lines(y = ~AAPL.Adjusted, name = "Apple")
+fig <- fig %>% add_lines(y = ~MSFT.Adjusted, name = "Microsoft")
+
+fig <- fig %>% layout(
+    title = "Stock Prices",
+    xaxis = list(
+
+rangeselector = 
+list(
+        buttons = list(
+          list(count = 3,label = "3 mo",step = "month",stepmode = "backward"),
+          list(count = 6,label = "6 mo",step = "month",stepmode = "backward"),
+          list(count = 1,label = "1 yr",step = "year",stepmode = "backward"),
+          list(count = 1,label = "YTD",step = "year",stepmode = "todate"),
+          list(step = "all")
+         )
+),
+
+rangeslider = list(type = "date")),
+yaxis = list(title = "Price"))
+
+fig
+
