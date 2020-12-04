@@ -14,11 +14,9 @@ if(require("plotly")==T){print("exist")}else{
 if(require("shiny")==T){print("exist")}else{
   install.packages("shiny")
   require("shiny")}
-
 if(require("tidyverse")==T){print("exist")}else{
   install.packages("tidyverse")
   require("tidyverse")}
-
 if(require("lubridate")==T){print("exist")}else{
   install.packages("lubridate")
   require("lubridate")}
@@ -28,14 +26,6 @@ if(require("lubridate")==T){print("exist")}else{
 
 
 
-
-
-
-
-
-
-tdfpath<-"data/tdf2017_6.csv"
-tdppath<-"data/TDP.csv"
 
 
 shinyServer(function(input, output) {
@@ -63,6 +53,9 @@ shinyServer(function(input, output) {
 
 
 
+tdfpath<-"data\\consumption.csv"
+tdppath<-"data\\stock.csv"
+
 tdf <- read.csv(tdfpath,stringsAsFactors = F)
 tdp <- read.csv(tdppath,stringsAsFactors = F)
 
@@ -77,7 +70,15 @@ tdp$ITMCDP <- gsub(" ","",tdp$ITMCDP)
 
 tdf$SHSCDF <- as.numeric(tdf$SHSCDF)
 
-unis<-unique(tdp$ITMCDP)#20200604[1:20]
+
+
+
+unis<- tdf%>% group_by(ITMCDF) %>% summarise(ss=sum(SIOQDF)) %>% arrange(desc(ss)) %>% select(ITMCDF)
+
+#unis<-intersect(tdp$ITMCDP, tdf$ITMCDF)
+#unis<-unique(tdp$ITMCDP)#20200604[1:20]####################################################
+
+
 
 #length(unis)
 items=1
@@ -86,22 +87,23 @@ items=1
 tdf$SIOUDF<-ymd(tdf$SIOUDF)
 tdp$YMD<-ymd(paste0(tdp$YMTGDP,"28"))
 
-tdf_item10<- tdf[which(tdf$ITMCDF%in%unis),]%>% 
+tdf_item10<- tdf[which(tdf$ITMCDF%in%c(unis)[[1]]),]%>% 
   filter(SIOUDF>=ymd("2017-01-01"))%>% 
   filter(CLRCDF>=tdf_col[colers])
 
-tdp_item10<- tdp[which(tdp$ITMCDP%in%unis),]%>% 
+tdp_item10<- tdp[which(tdp$ITMCDP%in%c(unis)[[1]]),]%>% 
   filter(YMD>=ymd("2017-01-01"))%>% 
   filter(CLRCDP>=tdf_col[colers])
 
-tdf_item1<-tdf_item10[tdf_item10$ITMCDF==unis[items],]
-tdp_item1<-tdp_item10[tdp_item10$ITMCDP==unis[items],]
+tdf_item1<-tdf_item10[tdf_item10$ITMCDF==unis[items,][[1]],]
+tdp_item1<-tdp_item10[tdp_item10$ITMCDP==unis[items,][[1]],]
 
 
 upfac<-c(5,4,7,8,10)
 downfac<-c(55,54,57,58,60)
 
 increase<-tdf_item1[which(tdf_item1$SHSCDF%in%upfac),]
+
 increase<-increase%>%group_by(SIOUDF,SHSCDF)%>%summarise(SIOQDF=sum(SIOQDF))
 
 decrease<-tdf_item1[which(tdf_item1$SHSCDF%in%downfac),]
@@ -126,9 +128,9 @@ dw_other<-dw_other%>%
 ###############################################
 
 increase <- data.frame(
-           SIOUDF=increase$SIOUDF,
-           SIOQDF=increase$SIOQDF,
-           SHSCDF=increase$SHSCDF)
+  SIOUDF=increase$SIOUDF,
+  SIOQDF=increase$SIOQDF,
+  SHSCDF=increase$SHSCDF)
 
 decrease <- data.frame(
   SIOUDF=decrease$SIOUDF,
@@ -256,22 +258,22 @@ bind<-NULL
 reduce_cumsum<-NULL
 increase_cumsum<-NULL
 for(i in 1:end){
-stoc<-tdp_item1$ACT[tdp_item1$YMD==tdp_item1$YMD[i]]
-
-up_cal<-upper %>% filter(ymd(upper$date.hour) >= ymd(tdp_item1$YMD[i]))
-up_cal2 <- up_cal[ymd(tdp_item1$YMD[i+1]) > ymd(up_cal$date.hour) ,]
-
-dw_cal<-downer %>% filter(ymd(downer$date.hour) >= ymd(tdp_item1$YMD[i]))
-dw_cal2 <- dw_cal[ymd(tdp_item1$YMD[i+1]) > ymd(dw_cal$date.hour) ,]
-
-up_cal2$rowsum[1] <-up_cal2$rowsum[1]+stoc
-stoc_trend <- (up_cal2$rowsum - dw_cal2$rowsum)
-stoc_trend<-cumsum(stoc_trend)
-
-bind <- c(bind,stoc_trend)
-
-reduce_cumsum<-c(reduce_cumsum,cumsum(dw_cal2$code60))
-increase_cumsum<-c(increase_cumsum,cumsum(up_cal2$code10))
+  stoc<-tdp_item1$ACT[tdp_item1$YMD==tdp_item1$YMD[i]]
+  
+  up_cal<-upper %>% filter(ymd(upper$date.hour) >= ymd(tdp_item1$YMD[i]))
+  up_cal2 <- up_cal[ymd(tdp_item1$YMD[i+1]) > ymd(up_cal$date.hour) ,]
+  
+  dw_cal<-downer %>% filter(ymd(downer$date.hour) >= ymd(tdp_item1$YMD[i]))
+  dw_cal2 <- dw_cal[ymd(tdp_item1$YMD[i+1]) > ymd(dw_cal$date.hour) ,]
+  
+  up_cal2$rowsum[1] <-up_cal2$rowsum[1]+stoc
+  stoc_trend <- (up_cal2$rowsum - dw_cal2$rowsum)
+  stoc_trend<-cumsum(stoc_trend)
+  
+  bind <- c(bind,stoc_trend)
+  
+  reduce_cumsum<-c(reduce_cumsum,cumsum(dw_cal2$code60))
+  increase_cumsum<-c(increase_cumsum,cumsum(up_cal2$code10))
 }
 
 
@@ -284,6 +286,11 @@ bind_time<-bind_time[tdp_item1$YMD[i+1]>bind_time]
 upper2<-upper
 downer2<-downer
 bind_time2<-bind_time
+
+
+
+
+
 
 
                                 output$plot4 <- renderPlotly(
@@ -299,7 +306,7 @@ add_trace(x = ~downer2$date.hour, y = ~downer2$code55,base = -(downer2$code55+do
 add_trace(x = ~downer2$date.hour, y = ~downer2$code57,base = -(downer2$code57+downer2$code55+downer2$code54), name = 57) %>% 
 add_trace(x = ~downer2$date.hour, y = ~downer2$code58,base = -(downer2$code58+downer2$code57+downer2$code55+downer2$code54), name = 58) %>% 
 add_trace(x = ~downer2$date.hour, y = ~downer2$code60,base = -(downer2$code60+downer2$code58+downer2$code57+downer2$code55+downer2$code54), name = 60) %>% 
-layout(title=paste0(tdf_col[colers],"-",unis[items]),yaxis = list(title = 'Count'),xaxis = list(title = 'y-m-d'), barmode = 'stack') %>% 
+layout(title=paste0(tdf_col[colers]),yaxis = list(title = 'Count'),xaxis = list(title = 'y-m-d'), barmode = 'stack') %>% 
 add_lines(x = ~bind_time2, y = ~bind, line = list(shape="hv",dash="dot"), name = "act stoc",
 fill="tonexty") %>% 
 add_lines(x = ~bind_time2, y = ~reduce_cumsum, line = list(shape="hv"), name = "month decrease") %>% 

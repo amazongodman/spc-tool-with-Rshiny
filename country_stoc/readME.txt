@@ -1,4 +1,4 @@
-path<-"C:\\Users\\0030602\\Desktop\\country_stoc"
+path<-"C:\\Users\\Desktop\\country_stoc"
 
 if(require(RODBC)){print("already installed")} else { install.packages("RODBC") }
 library(RODBC)
