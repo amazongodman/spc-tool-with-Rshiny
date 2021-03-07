@@ -1,6 +1,6 @@
 # spc-tool-with-Rshiny
 
-
+https://appsilon.com/impressive-dashboards-with-semantic-dashboard/
 
 for windows  
 
